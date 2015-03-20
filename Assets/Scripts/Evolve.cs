@@ -158,8 +158,6 @@ public class Evolve : MonoBehaviour {
 			}
 		}
 
-		Debug.Log ("Average Fitness: " + distribution.Count/population);
-
 		//Choose a random value out of the weighted distribution
 		a = distribution[Random.Range (0, distribution.Count)];
 
