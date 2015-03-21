@@ -159,15 +159,21 @@ public class Evolve : MonoBehaviour {
 		}
 
 		//Choose a random value out of the weighted distribution
-		a = distribution[Random.Range (0, distribution.Count)];
+		a = distribution[Random.Range (distribution.Count - 1, distribution.Count)];
 
-		//Debug.Log ("Distribution.Count: " + distribution.Count);
+		Debug.Log ("Distribution.Count: " + distribution.Count);
 		//Make sure that the chosen value cannot be chosen again
 		distribution.RemoveAll (item => item == a);
 
-		//Debug.Log ("Distribution.Count: " + distribution.Count);
+
 		//Pick a different random value out of the weighted distribution
-		b = distribution[Random.Range(0, distribution.Count)];
+		try{
+			b = distribution[Random.Range(distribution.Count - 1, distribution.Count)];
+		}catch(System.ArgumentOutOfRangeException oor ){
+			Debug.Log ("Distribution.Count: " + distribution.Count);
+			b = 0;
+		}
+
 
 
 		return new int[] {a, b};
@@ -247,19 +253,23 @@ public class Evolve : MonoBehaviour {
 				g.colors[mutatedSegment] = mutationColor;
 				g.speeds[mutatedSegment] = Random.Range (1f, 4f);
 				g.timerValues[mutatedSegment] = Random.Range (1f, 4f);
+
 			}else if(RollD (3) == 3){
 				//Add an entirely new component
 				g.nSegments++;
 				g.colors.Add (mutationColor);
 				g.components.Add (Random.Range(0, nComponents));
+
 				g.jointsPerComponent.Add (Random.Range (1, g.nSegments));
 				g.connections.Add (new List<int>());
 				SmartRandom smartRandom = new SmartRandom();
 				for(int i = 0; i < g.jointsPerComponent[g.nSegments - 1]; i++){
-					g.connections[i].Add (Random.Range (0, g.nSegments - 1));
+					g.connections[g.nSegments - 1].Add (smartRandom.Range (0, g.nSegments - 1));
 				}
+
 				g.speeds.Add (Random.Range (1f, 4f));
 				g.timerValues.Add (Random.Range (1f, 4f));
+				
 			}
 
 		}
@@ -478,12 +488,19 @@ public class Evolve : MonoBehaviour {
 					//Randomly selects which other object to attach itself to
 					//Use SmartRandom class to prevent double jointing
 					int index;
+
 					if(isFirstGeneration){
 						index = jointSelector.Range (0, segments.Count - 1);
 						g.connections[i].Add (index);
 						//Debug.Log ("Index: " + index + " SegmentNumber: " + i + " Segments.Count: " + segments.Count);
 					}else{
-						index = g.connections[i][j];
+						try{
+							index = g.connections[i][j];
+						}catch(System.ArgumentOutOfRangeException oor){
+							index = 0;
+							Debug.Log ("Argument out of range exception. i: " + i + " j: " + j + 
+							           " g.connections.Count: " + g.connections.Count + " g.connections[i].Count " + g.connections[i].Count);
+						}
 					}
 
 					springJoint.connectedBody = segments[index].rigidbody2D;
