@@ -153,24 +153,25 @@ public class Evolve : MonoBehaviour {
 		List<int> distribution = new List<int>();
 
 		for(int i = 0; i < population; i++){
-			for(int j = 0; j< genomes[i].fitness; j++){
+			for(int j = 0; j< genomes[i].fitness + 1; j++){
 				distribution.Add(i);
 			}
 		}
 
 		//Choose a random value out of the weighted distribution
-		a = distribution[Random.Range (distribution.Count - 1, distribution.Count)];
+		a = distribution[Random.Range (0, distribution.Count)];
 
-		Debug.Log ("Distribution.Count: " + distribution.Count);
+		Debug.Log ("A: " + a + " Distribution.Count: " + distribution.Count);
 		//Make sure that the chosen value cannot be chosen again
 		distribution.RemoveAll (item => item == a);
 
 
 		//Pick a different random value out of the weighted distribution
 		try{
-			b = distribution[Random.Range(distribution.Count - 1, distribution.Count)];
+			b = distribution[Random.Range(0, distribution.Count)];
+			Debug.Log ("B: " + b + " distribution.Count: " + distribution.Count);
 		}catch(System.ArgumentOutOfRangeException oor ){
-			Debug.Log ("Distribution.Count: " + distribution.Count);
+			Debug.Log ("Argument out of range B Distribution.Count: " + distribution.Count);
 			b = 0;
 		}
 
