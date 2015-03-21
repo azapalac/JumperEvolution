@@ -494,13 +494,7 @@ public class Evolve : MonoBehaviour {
 						g.connections[i].Add (index);
 						//Debug.Log ("Index: " + index + " SegmentNumber: " + i + " Segments.Count: " + segments.Count);
 					}else{
-						try{
-							index = g.connections[i][j];
-						}catch(System.ArgumentOutOfRangeException oor){
-							index = 0;
-							Debug.Log ("Argument out of range exception. i: " + i + " j: " + j + 
-							           " g.connections.Count: " + g.connections.Count + " g.connections[i].Count " + g.connections[i].Count);
-						}
+						index = g.connections[i][j];
 					}
 
 					springJoint.connectedBody = segments[index].rigidbody2D;
