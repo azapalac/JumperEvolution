@@ -1,9 +1,8 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Evolve.cs">
+  <MonoDevelop.Ide.Workspace />
+  <MonoDevelop.Ide.Workbench ActiveDocument="..\BarrelBlast\Assets\Barrel.cs">
     <Files>
-      <File FileName="Assets\Scripts\Evolve.cs" Line="193" Column="9" />
-      <File FileName="..\GitHub\New folder\Eruption\Assets\Scripts\VoxelMap.cs" Line="1" Column="1" />
+      <File FileName="..\BarrelBlast\Assets\Barrel.cs" Line="18" Column="3" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

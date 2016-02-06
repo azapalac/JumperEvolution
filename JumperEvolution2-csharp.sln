@@ -1,7 +1,11 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2008
 
+Project("{F7BE5855-5F93-F09A-488B-0E019A146684}") = "JumperEvolution2", "Assembly-CSharp-firstpass-vs.csproj", "{D8D6AB69-0186-EA1D-0BA4-DE6BC475D98A}"
+EndProject
 Project("{F7BE5855-5F93-F09A-488B-0E019A146684}") = "JumperEvolution2", "Assembly-CSharp-vs.csproj", "{91D1C2A2-880B-E514-CE51-10CA11422B6D}"
+EndProject
+Project("{F7BE5855-5F93-F09A-488B-0E019A146684}") = "JumperEvolution2", "Assembly-CSharp-Editor-vs.csproj", "{6A8DD438-2846-8EEF-0DC4-2628C15107BC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,15 +13,23 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D8D6AB69-0186-EA1D-0BA4-DE6BC475D98A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8D6AB69-0186-EA1D-0BA4-DE6BC475D98A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8D6AB69-0186-EA1D-0BA4-DE6BC475D98A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8D6AB69-0186-EA1D-0BA4-DE6BC475D98A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{91D1C2A2-880B-E514-CE51-10CA11422B6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{91D1C2A2-880B-E514-CE51-10CA11422B6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91D1C2A2-880B-E514-CE51-10CA11422B6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91D1C2A2-880B-E514-CE51-10CA11422B6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A8DD438-2846-8EEF-0DC4-2628C15107BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A8DD438-2846-8EEF-0DC4-2628C15107BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A8DD438-2846-8EEF-0DC4-2628C15107BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A8DD438-2846-8EEF-0DC4-2628C15107BC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-													GlobalSection(MonoDevelopProperties) = preSolution
+																														GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = Assembly-CSharp.csproj
 		Policies = $0
 		$0.TextStylePolicy = $1

@@ -1,5 +1,23 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.UI;
+
+public class Creature {
+    //The Creature class is used to keep track of the Creature during combat and differentiate between two creatures
+	public int score;
+    
+	public int number;
+	public int HP;
+	public List<GameObject> parts;
+
+	public Creature(int number, int HP){
+		this.number = number;
+		this.HP = HP;
+		this.score = 1;
+		this.parts = new List<GameObject>();
+	}
+
+}
 
 public class Evolve : MonoBehaviour {
 	/*
@@ -19,17 +37,21 @@ public class Evolve : MonoBehaviour {
 	 * Crossover will scramble data between two different genomes
 	 * 
 	 */
-	public class Genome{
+	public class Genome {
+		public int HP;
 		public int fitness;
 		public int nSegments;
 		public List<Color> colors;
 		public List<int> components;
+        public List<bool> eyeballs;
 		public List<float> timerValues;
 		public List<float> speeds;
 
 		//Needs to remember number of joints per component,and what the joints are connected to
 		public List<int> jointsPerComponent;
 		public List<List<int>> connections;
+        public List<List<Vector2>> jointSources;
+        public List<List<Vector2>> jointDestinations;
 
 		public Genome(){
 			this.nSegments = 0;
@@ -37,6 +59,9 @@ public class Evolve : MonoBehaviour {
 			this.components = new List<int>();
 			this.connections = new List<List<int>>();
 			this.jointsPerComponent = new List<int>();
+            this.jointSources = new List<List<Vector2>>();
+            this.jointDestinations = new List<List<Vector2>>();
+            this.eyeballs = new List<bool>();
 			this.timerValues = new List<float>();
 			this.speeds = new List<float>();
 			this.fitness = 0;
@@ -49,22 +74,27 @@ public class Evolve : MonoBehaviour {
 	public GameObject wiggleSegment;
 	public GameObject stretchSegment;
 	public GameObject slideSegment;
+	public GameObject weapon;
+    public GameObject eyeball;
+
 	public float timeLimit;
 	public static bool creatureInScene;
 	public int nComponents;
 	public int population;
-
-
+	private bool creatureDead = false;
+	private Creature creature1, creature2;
 	private Vector3 spawnPoint;
 	private Genome[] genomes;
-	//private Genome testCreature;
-
-
+    //private Genome testCreature;
+    private const int START_SCORE = 10;
+    public float segmentXDim;
+    public float segmentYDim;
 	private int generationCounter;
 	private float timer;
 	private bool isFirstGeneration;
 	private int populationCounter;
 
+    public Text generation, creature1Score, creature2Score;
 
 	// Use this for initialization
 	void Start () {
@@ -77,6 +107,7 @@ public class Evolve : MonoBehaviour {
 		//testCreature = new Genome();
 		generationCounter = 1;
 		Debug.Log ("Creating Generation " + generationCounter);
+        generation.text = "Generation " + generationCounter;
 		isFirstGeneration = true;
 		populationCounter = 0;
 
@@ -90,17 +121,65 @@ public class Evolve : MonoBehaviour {
 		
 		timer += Time.fixedDeltaTime;
 
+
+        if(creature1 != null)
+        {
+            creature1Score.text = "Creature 1 score: " + (creature1.score);
+        }
+        else
+        {
+            creature1Score.text = "DEAD";
+        }
+
+        if(creature2 != null)
+        {
+            creature2Score.text = "Creature 2 score: " + (creature2.score);
+        }
+        else
+        {
+            creature2Score.text = "DEAD";
+        }
+    
+
 		if(timer <= 0.1f && !creatureInScene){
+			creatureDead = false;
 			//Create creatures individually instead of all at once.
-			CreateCreature(genomes[populationCounter]);
+			creature1 = CreateCreature(genomes[populationCounter], 1);
+			creature2 = CreateCreature(genomes[++populationCounter], 2);
 			creatureInScene = true;
+		}
+
+		if((creature1.HP <= 0 || creature2.HP <= 0) && !creatureDead){
+			timer = timeLimit - timeLimit/5;
+			
+			creatureDead = true;
+
+			if(creature1.HP <= 0){
+                Debug.Log("Creature " + creature2.number + " killed creature " + creature1.number + "!");
+				creature2.score += 30;
+				for(int i = 0; i < creature1.parts.Count; i++){
+					Destroy(creature1.parts[i]);
+				}
+			}
+
+			
+			if(creature2.HP <= 0){
+                Debug.Log("Creature " + creature2.number + " killed creature " + creature1.number + "!");
+                creature1.score += 30;
+				for(int i = 0; i < creature2.parts.Count; i++){
+					Destroy(creature2.parts[i]);
+				}
+			}
 		}
 
 		if(timer >= timeLimit && creatureInScene){
 
 			//Estimate the fitness
-			int fitness = GetFitness(GameObject.FindGameObjectWithTag("Segment").transform.position);
-			genomes[populationCounter].fitness = fitness;
+			int fitness1 = creature1.score;
+			int fitness2 = creature2.score;
+
+			genomes[populationCounter - 1].fitness = fitness1;
+			genomes[populationCounter].fitness = fitness2;
 			//Debug.Log ("Fitness of creature " + populationCounter + ": " + fitness);
 			GameObject[] objectsToDestroy = GameObject.FindGameObjectsWithTag("Segment");
 
@@ -115,7 +194,7 @@ public class Evolve : MonoBehaviour {
 			if(populationCounter == population){
 
 				generationCounter++;
-				Debug.Log ("Creating Generation " + generationCounter);
+                generation.text = "Generation " + generationCounter;
 				populationCounter = 0;
 				isFirstGeneration = false;
 				CreateNextGeneration();
@@ -131,16 +210,15 @@ public class Evolve : MonoBehaviour {
 		//Creates the new generation of creatures out of the old generation
 		Genome[] newGeneration = new Genome[population];
 		for(int i = 0; i < population; i++){
+
 			//For each creature in the population, select a pair to breed
 			//These pairs are independent of one another
 			int[] pair = Selection();
 			Genome child = Crossover(genomes[pair[1]], genomes[pair[0]]);
 			child = Mutate(child);
 			newGeneration[i] = child;
-
-
 		}
-		//CreateCreature (newGeneration[0]);
+        //Pass the torch to the next generation and get rid of the parent genomes
 		genomes = newGeneration;
 	}
 
@@ -161,29 +239,34 @@ public class Evolve : MonoBehaviour {
 		//Choose a random value out of the weighted distribution
 		a = distribution[Random.Range (0, distribution.Count)];
 
-		Debug.Log ("A: " + a + " Distribution.Count: " + distribution.Count);
 		//Make sure that the chosen value cannot be chosen again
 		distribution.RemoveAll (item => item == a);
-
 
 		//Pick a different random value out of the weighted distribution
 		try{
 			b = distribution[Random.Range(0, distribution.Count)];
-			Debug.Log ("B: " + b + " distribution.Count: " + distribution.Count);
 		}catch(System.ArgumentOutOfRangeException oor ){
 			Debug.Log ("Argument out of range B Distribution.Count: " + distribution.Count);
 			b = 0;
 		}
-
-
 
 		return new int[] {a, b};
 	}
 
 
 	private Genome Crossover(Genome a, Genome b){
-		//G will be a container that takes in elements of a and b
+		//g will be a container that takes in elements of a and b
 		Genome g = new Genome();
+
+        if (FlipCoin())
+        {
+            g.HP = a.HP;
+        }
+        else
+        {
+            g.HP = b.HP;
+        }
+
 		Genome biggerGenome;
 		int maxSegments = Mathf.Max(a.nSegments, b.nSegments);
 		int minSegments = Mathf.Min(a.nSegments, b.nSegments);
@@ -225,12 +308,17 @@ public class Evolve : MonoBehaviour {
 	}
 
 	private void CopySegment(Genome to, Genome from, int index){
-		//Copy all segment values. I can add to this later on.
+		//Copy all segment values. 
 		to.colors.Add (from.colors[index]);
 		to.components.Add (from.components[index]);
+        to.eyeballs.Add(from.eyeballs[index]);
+
 		to.connections.Add (from.connections[index]);
-		to.jointsPerComponent.Add (from.jointsPerComponent[index]);
-		to.speeds.Add (from.speeds[index]);
+        to.jointsPerComponent.Add (from.jointsPerComponent[index]);
+        to.jointDestinations.Add(from.jointDestinations[index]);
+        to.jointSources.Add(from.jointSources[index]);
+
+        to.speeds.Add (from.speeds[index]);
 		to.timerValues.Add (from.timerValues[index]);
 	}
 
@@ -242,7 +330,7 @@ public class Evolve : MonoBehaviour {
 
 			int mutatedSegment = Random.Range(0, g.nSegments);
 			//Change the color so we know the segment has been mutated
-			Color mutationColor = new Color(Random.Range (0f, 1f), Random.Range (0f, 1f), Random.Range(0f, 1f));
+			Color mutationColor = new Color(Random.Range (0f, 1f), Random.Range (0f, 1f), Random.Range(0f, 1f), Random.Range(0.1f, 1f));
 
 			if(RollD(3) == 1){
 				//Replace component with a new, random component
@@ -263,10 +351,30 @@ public class Evolve : MonoBehaviour {
 
 				g.jointsPerComponent.Add (Random.Range (1, g.nSegments));
 				g.connections.Add (new List<int>());
-				SmartRandom smartRandom = new SmartRandom();
+                g.jointDestinations.Add(new List<Vector2>());
+                g.jointSources.Add(new List<Vector2>());
+
+                if (RollD(g.nSegments) < g.nSegments - 2)
+                {
+                    g.eyeballs.Add(true);
+                }
+                else
+                {
+                    g.eyeballs.Add(false);
+                }
+
+				SmartRandom connectionSelector = new SmartRandom();
+
+
 				for(int i = 0; i < g.jointsPerComponent[g.nSegments - 1]; i++){
-					g.connections[g.nSegments - 1].Add (smartRandom.Range (0, g.nSegments - 1));
-				}
+					g.connections[g.nSegments - 1].Add (connectionSelector.Range (0, g.nSegments - 1));
+
+                    g.jointDestinations[g.nSegments - 1].Add(new Vector2(RandomPointInSquare().x * segmentXDim, 
+                        RandomPointInSquare().y * segmentYDim));
+
+                    g.jointSources[g.nSegments - 1].Add(new Vector2(RandomPointInSquare().x * segmentXDim,
+                       RandomPointInSquare().y * segmentYDim));
+                }
 
 				g.speeds.Add (Random.Range (1f, 4f));
 				g.timerValues.Add (Random.Range (1f, 4f));
@@ -277,22 +385,34 @@ public class Evolve : MonoBehaviour {
 		return g;
 	}
 
-	private void CreateCreature(Genome g){
-		//The creature and the genome are created together
+	private Creature CreateCreature(Genome g, int creatureNum){
+
+        int HP;
+        if (isFirstGeneration)
+        {
+            HP = Random.Range(20, 70);
+            g.HP = HP;
+        }
+        else
+        {
+            HP = g.HP;
+        }
+
+		Creature creature = new Creature(creatureNum, HP);
+		//The creature and the genome are created together on the first generation
 		List<GameObject> segments = new List<GameObject>();
 		//Set the number of segments. Should be random if not set yet.
-
-		if(isFirstGeneration){
-			//Switched to 2 for debug purposes
-			g.nSegments = Random.Range (1, 5);
+        
+		if(isFirstGeneration ){
+            g.nSegments = Random.Range (1, 5);
 		}
 
 		//Creatures are now a solid color. This allows us to see a creature's parents when they cross breed
 		Color color = Color.white;
 
+        //Setting minimum for alpha channel value to prevent completely invisible creatures
 		if(isFirstGeneration){
-			color =  new Color(Random.Range (0f, 1f),Random.Range (0f, 1f), Random.Range (0f, 1f));
-			//g.colors.Add (color);
+			color =  new Color(Random.Range (0f, 1f),Random.Range (0f, 1f), Random.Range (0f, 1f), Random.Range(0.1f, 1f));
 		}
 		//Whenever there is more than one segment, add a joint between the two segments
 		//A single segment can have more than one joint
@@ -304,7 +424,17 @@ public class Evolve : MonoBehaviour {
 			int state;
 
 			if(isFirstGeneration){
-				state = Random.Range (0, nComponents);
+
+                //This way we prevent getting a weapon by itself
+                if (g.components.Count == 0)
+                {
+                    state = Random.Range(0, nComponents -1);
+                }
+                else
+                {
+                    state = Random.Range(0, nComponents);
+                }
+
 				g.components.Add(state);
 				g.colors.Add (color);
 			}else{
@@ -325,11 +455,17 @@ public class Evolve : MonoBehaviour {
 				speed = g.speeds[i];
 			}
 
-			GameObject o;
+			GameObject o = segment;
 
 
 			//Random vector to prevent parts from sticking together due to all spawning in the same location
 			Vector3 randomVect = new Vector3(Random.Range(0.01f, 0.1f), Random.Range(0.01f, 0.1f), 0);
+
+			if(creatureNum == 1){
+				randomVect.x -= 5;
+			}else{
+				randomVect.x += 5;
+			}
 
 			switch (state){
 
@@ -338,7 +474,9 @@ public class Evolve : MonoBehaviour {
 				o = Instantiate(segment, spawnPoint + randomVect, Quaternion.identity) as GameObject;
 				o.GetComponent<SpriteRenderer>().color = color;
 				segments.Add(o);
+				o.GetComponent<Body>().creature = creature;
 				o.name = "Segment" + i;
+				creature.parts.Add (o);
 				//Debug.Log ("State: " + state);
 				//o.tag = "unconnected";
 				break;
@@ -348,7 +486,9 @@ public class Evolve : MonoBehaviour {
 				o.GetComponent<SpriteRenderer>().color = color;
 				o.GetComponent<Rotator>().timeLimit = timerValue;
 				o.GetComponent<Rotator>().rotationSpeed = speed;
+				o.GetComponent<Body>().creature = creature;
 				segments.Add(o);
+				creature.parts.Add (o);
 				o.name = "Segment" + i;
 				//Debug.Log ("State: " + state);
 				break;
@@ -358,6 +498,8 @@ public class Evolve : MonoBehaviour {
 				o.GetComponent<SpriteRenderer>().color = color;
 				o.GetComponent<Stretcher>().timeLimit = timerValue;
 				o.GetComponent<Stretcher>().speed = speed;
+				o.GetComponent<Body>().creature = creature;
+				creature.parts.Add (o);
 				segments.Add(o);
 				o.name = "Segment" + i;
 				//Debug.Log ("State: " + state);
@@ -368,6 +510,8 @@ public class Evolve : MonoBehaviour {
 				o.GetComponent<SpriteRenderer>().color = color;
 				o.GetComponent<Slider>().timeLimit = timerValue;
 				o.GetComponent<Slider>().speed = speed;
+				o.GetComponent<Body>().creature = creature;
+				creature.parts.Add (o);
 				segments.Add(o);
 				o.name = "Segment" + i;
 				//Debug.Log ("State: " + state);
@@ -381,6 +525,8 @@ public class Evolve : MonoBehaviour {
 				o.GetComponent<Slider>().timeLimit = timerValue;
 				o.GetComponent<Slider>().speed = speed;
 				o.GetComponent<SpriteRenderer>().color = color;
+				o.GetComponent<Body>().creature = creature;
+				creature.parts.Add (o);
 				segments.Add(o);
 				o.name = "Segment" + i;
 				//Debug.Log ("State: " + state);
@@ -394,6 +540,8 @@ public class Evolve : MonoBehaviour {
 				o.GetComponent<Rotator>().timeLimit = timerValue;
 				o.GetComponent<Rotator>().rotationSpeed = speed;
 				o.GetComponent<SpriteRenderer>().color = color;
+				o.GetComponent<Body>().creature = creature;
+				creature.parts.Add (o);
 				segments.Add(o);
 				o.name = "Segment" + i;
 				//Debug.Log ("State: " + state);
@@ -408,9 +556,10 @@ public class Evolve : MonoBehaviour {
 
 				o.GetComponent<Slider>().timeLimit = timerValue;
 				o.GetComponent<Slider>().speed = speed;
-
+				o.GetComponent<Body>().creature = creature;
 				o.GetComponent<SpriteRenderer>().color = color;
 				segments.Add(o);
+				creature.parts.Add (o);
 				o.name = "Segment" + i;
 				//Debug.Log ("State: " + state);
 				break;
@@ -433,10 +582,21 @@ public class Evolve : MonoBehaviour {
 				o.GetComponent<SpriteRenderer>().color = color;
 				o.GetComponent<Slider>().timeLimit = timerValue;
 				o.GetComponent<Slider>().speed = speed;
-
+				o.GetComponent<Body>().creature = creature;
 				segments.Add(o);
+				creature.parts.Add (o);
 				o.name = "Segment" + i;
 				//Debug.Log ("State: " + state);
+				break;
+
+			case 8:
+				o = Instantiate(weapon, spawnPoint + randomVect, Quaternion.identity) as GameObject;
+				o.GetComponent<SpriteRenderer>().color = new Color(1, 0, 0, color.a);
+				creature.parts.Add (o);
+				o.GetComponent<Body>().creature = creature;
+				o.GetComponent<Weapon>().C = creature;
+				segments.Add(o);
+				o.name = "Weapon";
 				break;
 
 			default:
@@ -444,6 +604,35 @@ public class Evolve : MonoBehaviour {
 				break;
 
 			}
+
+            //Add eyeballs!
+            bool addEyeball = false;
+
+            if (isFirstGeneration)
+            {
+                if(RollD(i) == i)
+                {
+                    addEyeball = true;
+                }
+
+                g.eyeballs.Add(addEyeball);
+            }
+            else
+            {
+                addEyeball = g.eyeballs[i];
+            }
+
+            if (addEyeball)
+            {
+                GameObject creatureEye = Instantiate(eyeball, spawnPoint + randomVect, Quaternion.identity) as GameObject;
+                DistanceJoint2D j = creatureEye.AddComponent<DistanceJoint2D>();
+                j.connectedBody = segments[i].GetComponent<Rigidbody2D>();
+
+                creatureEye.GetComponent<DistanceJoint2D>().distance = 0;
+                creature.parts.Add(creatureEye);
+                //eye.transform.SetParent(o.transform);
+            }
+
 			//Adds joints to each segment. Can only connect with segments that were generated previously
 			//This can be used to guarantee a segment will not be connected to itself
 			//Use Random.Range(0, segments.Count -2) if segments.Count >= 2;
@@ -460,11 +649,28 @@ public class Evolve : MonoBehaviour {
 			//Keeps track of what the joints are connected to
 			//Also needs a place holder
 			List<int> connectionList = new List<int>();
+            List<Vector2> jointSourceList = new List<Vector2>();
+            List<Vector2> jointDestinationList = new List<Vector2>();
 
 			if(isFirstGeneration){
 				g.connections.Add (connectionList);
+                g.jointSources.Add(jointSourceList);
+                g.jointDestinations.Add(jointDestinationList);
 			}else{
-				connectionList = g.connections[i];
+				
+                try
+                {
+                    connectionList = g.connections[i];
+                    jointSourceList = g.jointSources[i];
+                    jointDestinationList = g.jointDestinations[i];
+                }
+                catch(System.ArgumentOutOfRangeException e)
+                {
+                    Debug.Log("Exception!");
+                    Debug.Log("Joint source list count: " + jointSourceList.Count);
+                    Debug.Log("I: " + i);
+                }
+                
 			}
 
 			if(segments.Count >= 2){
@@ -482,6 +688,7 @@ public class Evolve : MonoBehaviour {
 				//int jointType = 0;
 				SmartRandom jointSelector = new SmartRandom();
 				List<SpringJoint2D> segmentJoints = new List<SpringJoint2D>();
+
 				for(int j = 0; j < nJoints; j++){
 
 					segmentJoints.Add (segments[i].AddComponent<SpringJoint2D>());
@@ -489,22 +696,45 @@ public class Evolve : MonoBehaviour {
 					//Randomly selects which other object to attach itself to
 					//Use SmartRandom class to prevent double jointing
 					int index;
+                    Vector2 sourceVect;
+                    Vector2 destinationVect;
 
 					if(isFirstGeneration){
 						index = jointSelector.Range (0, segments.Count - 1);
 						g.connections[i].Add (index);
+
+                        Vector2 s = RandomPointInSquare(), d = RandomPointInSquare();
+                        sourceVect = new Vector2(s.x * segmentXDim/2, s.y * segmentYDim/2);
+                        g.jointSources[i].Add(sourceVect);
+
+                        destinationVect = new Vector2(d.x * segmentXDim/2, d.y * segmentYDim/2);
+                        g.jointDestinations[i].Add(destinationVect);
 						//Debug.Log ("Index: " + index + " SegmentNumber: " + i + " Segments.Count: " + segments.Count);
 					}else{
 						index = g.connections[i][j];
+                        sourceVect = g.jointSources[i][j];
+                        destinationVect = g.jointDestinations[i][j];
 					}
 
-					springJoint.connectedBody = segments[index].rigidbody2D;
-					springJoint.distance = 5;
-					springJoint.dampingRatio = 10;
-	
-				}
+
+					
+
+                    if (i > 0)
+                    {
+                        segments[i].GetComponent<SpringJoint2D>().distance = 5;
+                        segments[i].GetComponent<SpringJoint2D>().dampingRatio = 0.5f;
+                    
+                        segments[i].GetComponent<SpringJoint2D>().anchor = sourceVect;
+                        segmentJoints[j].GetComponent<SpringJoint2D>().connectedAnchor = destinationVect;
+                       
+                    }
+
+                    springJoint.connectedBody = segments[index].GetComponent<Rigidbody2D>();
+                }
 			}
 		}
+
+		return creature;
 
 	}
 
@@ -513,10 +743,20 @@ public class Evolve : MonoBehaviour {
 	private int Round(float f){
 		return (int)(f + 0.5f);
 	}
+
+    private Vector2 RandomPointInSquare()
+    {
+        Vector2 v = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f));
+        return v;
+    }
+
+    private Vector2 RandomPointInCircle()
+    {
+        Vector2 v = RandomPointInSquare();
+        v.Normalize();
+        return v;
+    }
 		
-	private int GetFitness(Vector3 v){
-		return Round(Mathf.Abs(v.x - spawnPoint.x));
-	}
 
 	private bool FlipCoin(){
 		bool b = false;

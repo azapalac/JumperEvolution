@@ -23,16 +23,16 @@ public class Slider : MonoBehaviour {
 	void Update () {
 
 		if(canMove){
-			if(Mathf.Abs (rigidbody2D.velocity.x) <= speed){
-				rigidbody2D.AddForce (new Vector2(moveDir * 100, 0), ForceMode2D.Force);
+			if(Mathf.Abs (GetComponent<Rigidbody2D>().velocity.x) <= speed){
+				GetComponent<Rigidbody2D>().AddForce (new Vector2(moveDir * 100, 0), ForceMode2D.Force);
 			}
 
 			if(t >= timeLimit){
 				//Switch movement direction and reset timer
-				rigidbody2D.isKinematic = true;
+				GetComponent<Rigidbody2D>().isKinematic = true;
 				moveDir *= -1;
 				t = 0;
-				rigidbody2D.isKinematic = false;
+				GetComponent<Rigidbody2D>().isKinematic = false;
 			}
 			t += Time.deltaTime;
 		}
