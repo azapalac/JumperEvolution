@@ -47,7 +47,7 @@ public class Weapon : MonoBehaviour {
         if(Vector3.Magnitude(prevPos - currentPos) >= 0.1f)
         {
             isMoving = true;
-            //Blah
+            
         }
         else
         {

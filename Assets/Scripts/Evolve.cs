@@ -5,7 +5,7 @@ using UnityEngine.UI;
 public class Creature {
     //The Creature class is used to keep track of the Creature during combat and differentiate between two creatures
 	public int score;
-    
+    public string name;
 	public int number;
 	public int HP;
 	public List<GameObject> parts;
@@ -39,6 +39,8 @@ public class Evolve : MonoBehaviour {
 	 */
 	public class Genome {
 		public int HP;
+        public string firstName;
+        public string lastName;
 		public int fitness;
 		public int nSegments;
 		public List<Color> colors;
@@ -54,6 +56,8 @@ public class Evolve : MonoBehaviour {
         public List<List<Vector2>> jointDestinations;
 
 		public Genome(){
+            this.firstName = "";
+            this.lastName = "";
 			this.nSegments = 0;
 			this.colors = new List<Color>();
 			this.components = new List<int>();
@@ -124,7 +128,7 @@ public class Evolve : MonoBehaviour {
 
         if(creature1 != null)
         {
-            creature1Score.text = "Creature 1 score: " + (creature1.score);
+            creature1Score.text = creature1.name+ ": " + (creature1.score);
         }
         else
         {
@@ -133,7 +137,7 @@ public class Evolve : MonoBehaviour {
 
         if(creature2 != null)
         {
-            creature2Score.text = "Creature 2 score: " + (creature2.score);
+            creature2Score.text = creature2.name +  ": " + (creature2.score);
         }
         else
         {
@@ -261,10 +265,12 @@ public class Evolve : MonoBehaviour {
         if (FlipCoin())
         {
             g.HP = a.HP;
+            g.lastName = a.lastName;
         }
         else
         {
             g.HP = b.HP;
+            g.lastName = b.lastName;
         }
 
 		Genome biggerGenome;
@@ -399,6 +405,20 @@ public class Evolve : MonoBehaviour {
         }
 
 		Creature creature = new Creature(creatureNum, HP);
+
+        //Name the creature
+        g.firstName = MakeRandomName(3, 6);
+        string creatureName = g.firstName;
+
+        if (isFirstGeneration)
+        {
+            g.lastName = MakeRandomName(3, 6);
+
+        }
+
+        creatureName += " " + g.lastName;
+        creature.name = creatureName;
+
 		//The creature and the genome are created together on the first generation
 		List<GameObject> segments = new List<GameObject>();
 		//Set the number of segments. Should be random if not set yet.
@@ -743,6 +763,48 @@ public class Evolve : MonoBehaviour {
 	private int Round(float f){
 		return (int)(f + 0.5f);
 	}
+
+    private string MakeRandomName(int minNameLength, int maxNameLength)
+    {
+        string s = "";
+        int nameLength = Random.Range(minNameLength, maxNameLength + 1);
+      
+
+        for(int i = 0; i < nameLength; i++)
+        {
+            if (i % 2 == 0)
+            {
+                s += MakeRandomConsonant();
+            }
+            else
+            {
+                s += MakeRandomVowel();
+            }
+
+            if (i == 0)
+            {
+                string cap = "";
+                cap += char.ToUpper(s[0]);
+                s = cap;
+            }
+            
+        }
+
+        return s;
+    }
+
+    private char MakeRandomVowel()
+    {
+       
+        string vowels = "aeiouy";
+        return vowels[Random.Range(0, 6)];
+    }
+    private char MakeRandomConsonant()
+    {
+        string consonants = "bcdfghjklmnpqrstvwxz";
+        return consonants[Random.Range(0, 20)];
+    }
+
 
     private Vector2 RandomPointInSquare()
     {
