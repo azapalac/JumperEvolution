@@ -27,8 +27,7 @@ public class Weapon : MonoBehaviour {
 		if(other.gameObject.tag == "Segment" && isMoving){
 			if(other.gameObject.GetComponent<Body>().creature.number != C.number){
 				other.gameObject.GetComponent<Body>().creature.HP -= damage;
-				C.score += 10;
-				other.gameObject.GetComponent<Body>().creature.score -= 10;
+                C.score += 10;
 				if(other.gameObject.GetComponent<Body>().creature.score < 1)
 					other.gameObject.GetComponent<Body>().creature.score = 1;
 			}

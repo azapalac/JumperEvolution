@@ -82,7 +82,7 @@ public class Evolve : MonoBehaviour {
     public GameObject eyeball;
 
 	public float timeLimit;
-	public static bool creatureInScene;
+	public static bool creaturesInScene;
 	public int nComponents;
 	public int population;
 	private bool creatureDead = false;
@@ -98,7 +98,7 @@ public class Evolve : MonoBehaviour {
 	private bool isFirstGeneration;
 	private int populationCounter;
 
-    public Text generation, creature1Score, creature2Score;
+    public Text generation, creature1Score, creature2Score, creatureNumbers;
 
 	// Use this for initialization
 	void Start () {
@@ -112,10 +112,11 @@ public class Evolve : MonoBehaviour {
 		generationCounter = 1;
 		Debug.Log ("Creating Generation " + generationCounter);
         generation.text = "Generation " + generationCounter;
-		isFirstGeneration = true;
+        
+        isFirstGeneration = true;
 		populationCounter = 0;
 
-		creatureInScene = false;
+		creaturesInScene = false;
 		spawnPoint = GameObject.Find ("SpawnPoint").transform.position;
 		timer = 0;
 	}
@@ -124,9 +125,9 @@ public class Evolve : MonoBehaviour {
 	void FixedUpdate () {
 		
 		timer += Time.fixedDeltaTime;
+        creatureNumbers.text = "Creature " + (populationCounter) + " vs " + "Creature " + (populationCounter + 1);
 
-
-        if(creature1 != null)
+        if (creature1 != null)
         {
             creature1Score.text = creature1.name+ ": " + (creature1.score);
         }
@@ -145,12 +146,13 @@ public class Evolve : MonoBehaviour {
         }
     
 
-		if(timer <= 0.1f && !creatureInScene){
+		if(timer <= 0.1f && !creaturesInScene){
 			creatureDead = false;
 			//Create creatures individually instead of all at once.
 			creature1 = CreateCreature(genomes[populationCounter], 1);
 			creature2 = CreateCreature(genomes[++populationCounter], 2);
-			creatureInScene = true;
+           
+			creaturesInScene = true;
 		}
 
 		if((creature1.HP <= 0 || creature2.HP <= 0) && !creatureDead){
@@ -176,7 +178,7 @@ public class Evolve : MonoBehaviour {
 			}
 		}
 
-		if(timer >= timeLimit && creatureInScene){
+		if(timer >= timeLimit && creaturesInScene){
 
 			//Estimate the fitness
 			int fitness1 = creature1.score;
@@ -204,7 +206,7 @@ public class Evolve : MonoBehaviour {
 				CreateNextGeneration();
 			}
 
-			creatureInScene = false;
+			creaturesInScene = false;
 
 		}
 
